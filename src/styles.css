@@ -1,0 +1,495 @@
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #1a1a1a;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: #1a1a1a;
+}
+
+.pixi-canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-color: #1a1a1a;
+}
+
+.pixi-canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover; /* 改为cover确保填满整个区域 */
+  background-color: #1a1a1a;
+  display: block;
+}
+
+.react-ui-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none; /* Allow clicks to pass through to the canvas */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.react-ui-container > * {
+  pointer-events: all; /* Re-enable pointer events for UI elements */
+}
+
+.bidding-panel {
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  margin-top: 20%;
+}
+
+/* Updated UI Layout */
+.game-info {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  margin: 1rem;
+  font-size: 0.9rem;
+}
+
+.bottom-controls {
+  margin-bottom: 180px; /* Position above player hand */
+  display: flex;
+  justify-content: center;
+}
+
+.playing-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.player-action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.waiting-indicator {
+  background: rgba(255, 193, 7, 0.9);
+  color: #333;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+/* Bottom controls positioning */
+.bottom-controls {
+  position: absolute;
+  bottom: 200px; /* More space above player avatar, below cards */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+/* Bidding panel in center */
+.bidding-panel {
+  display: flex;
+  gap: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 15px 25px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.bidding-panel button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  min-width: 80px;
+}
+
+/* Waiting indicators */
+.waiting-bidding {
+  background: rgba(255, 193, 7, 0.9);
+  color: #333;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Specific button styles */
+.play-btn {
+  background-color: #4CAF50 !important;
+}
+
+.play-btn:hover {
+  background-color: #45a049 !important;
+}
+
+.pass-btn {
+  background-color: #f44336 !important;
+}
+
+.pass-btn:hover {
+  background-color: #da190b !important;
+}
+
+.hint-btn {
+  background-color: #2196F3 !important;
+}
+
+.hint-btn:hover {
+  background-color: #0b7dda !important;
+}
+
+.game-over-panel {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.game-over-panel h2 {
+  margin: 0 0 1rem 0;
+  color: #ffd700;
+}
+
+.game-over-panel h3 {
+  margin: 0 0 1.5rem 0;
+  color: #fff;
+}
+
+/* Played Cards Area Styles */
+.played-cards-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.played-cards-container {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.played-card-group {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  min-width: 120px;
+}
+
+.player-name {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.card-combination {
+  display: flex;
+  gap: 0.3rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.played-card {
+  background: white;
+  border: 2px solid #333;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  min-width: 24px;
+  text-align: center;
+}
+
+.played-card:contains("♥"), .played-card:contains("♦") {
+  color: #d32f2f;
+}
+
+.combination-label {
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: bold;
+}
+
+.current-turn-indicator {
+  position: absolute;
+  top: -3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(76, 175, 80, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* Player Avatar Styles */
+.player-avatar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.player-avatar.left {
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: row;
+}
+
+.player-avatar.right {
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: row-reverse;
+}
+
+.player-avatar.center {
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 20; /* Ensure it's above other elements */
+}
+
+.player-avatar.current-player {
+  background: rgba(76, 175, 80, 0.9);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+}
+
+.avatar-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.role-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: white;
+  z-index: 11;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.landlord-role {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  border: 2px solid #ffd700;
+}
+
+.farmer-role {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  border: 2px solid #81c784;
+}
+
+.player-info {
+  text-align: center;
+}
+
+.player-avatar.right .player-info {
+  text-align: right;
+}
+
+.player-avatar.left .player-info {
+  text-align: left;
+}
+
+.player-avatar.center .player-info {
+  text-align: center;
+}
+
+/* Human Player Avatar Container */
+.human-player-avatar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  pointer-events: none; /* Allow clicks to pass through container */
+}
+
+.human-player-avatar .player-avatar {
+  pointer-events: auto; /* Re-enable clicks on the avatar itself */
+}
+
+.player-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  color: white;
+}
+
+.card-count {
+  font-size: 0.8rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.bid-status {
+  font-size: 0.7rem;
+  color: #87ceeb;
+  font-weight: bold;
+  margin-top: 0.2rem;
+}
+
+/* Hint Display Styles */
+.hint-display {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.4);
+  z-index: 100;
+  max-width: 400px;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  pointer-events: auto;
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.hint-content {
+  flex-grow: 1;
+}
+
+.hint-icon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.hint-text {
+  font-size: 1rem;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.hint-cards {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-weight: normal;
+  padding: 0.3rem 0.6rem;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  margin-top: 0.5rem;
+}
+
+.hint-close {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  font-size: 1.5rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  opacity: 0.8;
+  width: 24px !important;
+  height: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: opacity 0.2s !important;
+}
+
+.hint-close:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
+}
