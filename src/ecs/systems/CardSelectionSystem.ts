@@ -1,6 +1,7 @@
 import { System } from './System';
 import { Entity } from '../types';
-import { CardSelected, Transform, CardData } from '../components';
+import { CardSelected, CardData, SelectedCards, PlayerInfo } from '../components';
+import { EventName } from '../EventBus';
 
 export class CardSelectionSystem extends System {
   private selectedCards: Set<Entity> = new Set();
@@ -12,57 +13,81 @@ export class CardSelectionSystem extends System {
 
   private setupEventListeners(): void {
     if (this.world?.eventBus) {
-      this.world.eventBus.on('CardClicked', this.handleCardClick.bind(this));
-      this.world.eventBus.on('ClearSelection', this.clearSelection.bind(this));
+      this.world.eventBus.on(EventName.SelectCardRequest, this.handleSelectCardRequest.bind(this));
+      this.world.eventBus.on('clearCardSelection', this.clearSelection.bind(this));
     }
   }
 
-  private handleCardClick(data: { cardEntity: Entity }): void {
-    const { cardEntity } = data;
+  private handleSelectCardRequest(data: { playerId: number; cardEntity: Entity }): void {
+    const { playerId, cardEntity } = data;
+    console.log(`[CardSelectionSystem] SelectCardRequest for player ${playerId}, card ${cardEntity}`);
     
     if (this.selectedCards.has(cardEntity)) {
-      this.deselectCard(cardEntity);
+      this.deselectCard(cardEntity, playerId);
     } else {
-      this.selectCard(cardEntity);
+      this.selectCard(cardEntity, playerId);
     }
   }
 
-  private selectCard(cardEntity: Entity): void {
-    // Add selected component
-    this.world.components.add(cardEntity, new CardSelected(true));
+  private selectCard(cardEntity: Entity, playerId: number): void {
+    // Mark card as selected (component-based for RenderSystem animation)
+    const cardSelected = this.world.components.tryGet(cardEntity, CardSelected);
+    if (cardSelected) {
+      cardSelected.selected = true;
+    } else {
+      this.world.components.add(cardEntity, new CardSelected(true));
+    }
     this.selectedCards.add(cardEntity);
 
-    // Raise the card visually
-    const transform = this.world.components.get(cardEntity, Transform);
-    if (transform) {
-      transform.y -= 20; // Raise by 20 pixels
+    // Update player's SelectedCards set
+    const playerEntity = this.findPlayerById(playerId) ?? this.world.humanPlayer;
+    const selected = this.world.components.tryGet(playerEntity, SelectedCards) ?? new SelectedCards();
+    if (!this.world.components.has(playerEntity, SelectedCards)) {
+      this.world.components.add(playerEntity, selected);
     }
+    selected.cards.add(cardEntity);
 
     if (this.world?.eventBus) {
-      this.world.eventBus.emit('CardSelected', { cardEntity });
+      this.world.eventBus.emit(EventName.CardSelected, { cardEntity, selected: true, playerId });
     }
+    console.log(`[CardSelectionSystem] Selected card ${cardEntity} for player ${playerId}`);
   }
 
-  private deselectCard(cardEntity: Entity): void {
-    // Remove selected component
-    this.world.components.remove(cardEntity, CardSelected);
+  private deselectCard(cardEntity: Entity, playerId: number): void {
+    // Unmark selection but keep component for consistency
+    const cardSelected = this.world.components.tryGet(cardEntity, CardSelected);
+    if (cardSelected) {
+      cardSelected.selected = false;
+    }
     this.selectedCards.delete(cardEntity);
 
-    // Lower the card back to original position
-    const transform = this.world.components.get(cardEntity, Transform);
-    if (transform) {
-      transform.y += 20; // Lower by 20 pixels
+    // Update player's SelectedCards set
+    const playerEntity = this.findPlayerById(playerId) ?? this.world.humanPlayer;
+    const selected = this.world.components.tryGet(playerEntity, SelectedCards);
+    if (selected) {
+      selected.cards.delete(cardEntity);
     }
 
     if (this.world?.eventBus) {
-      this.world.eventBus.emit('CardDeselected', { cardEntity });
+      this.world.eventBus.emit(EventName.CardSelected, { cardEntity, selected: false, playerId });
     }
+    console.log(`[CardSelectionSystem] Deselected card ${cardEntity} for player ${playerId}`);
   }
 
-  private clearSelection(): void {
-    for (const cardEntity of this.selectedCards) {
-      this.deselectCard(cardEntity);
+  private clearSelection(payload?: { playerId?: number }): void {
+    const targetPlayerId = payload?.playerId ?? 0;
+    const playerEntity = this.findPlayerById(targetPlayerId) ?? this.world.humanPlayer;
+
+    const selected = this.world.components.tryGet(playerEntity, SelectedCards);
+    if (selected) {
+      for (const cardEntity of Array.from(selected.cards)) {
+        this.deselectCard(cardEntity, targetPlayerId);
+      }
+      selected.cards.clear();
     }
+
+    // Also clear internal tracking set
+    this.selectedCards.clear();
   }
 
   public getSelectedCards(): Entity[] {
@@ -77,5 +102,12 @@ export class CardSelectionSystem extends System {
 
   update(deltaTime: number): void {
     // This system is event-driven, no continuous updates needed
+  }
+
+  private findPlayerById(playerId: number): number | undefined {
+    return this.world.entities.find((entity, getComponent) => {
+      const info = getComponent?.(PlayerInfo);
+      return info?.id === playerId;
+    }, this.world.components);
   }
 }

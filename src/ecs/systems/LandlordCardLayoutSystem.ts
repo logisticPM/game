@@ -50,24 +50,34 @@ export class LandlordCardLayoutSystem extends System {
       return;
     }
 
-    const layout = dataManager.getGameData().layout.landlordCards;
+    const layoutData = dataManager.getGameData().layout as any;
+    // Support both naming styles in GameData: landlordCards or landlord_cards
+    const landlordLayout = layoutData.landlordCards || layoutData.landlord_cards || {};
+    const startX = landlordLayout.startX ?? landlordLayout.x ?? (this.world.app?.screen?.width || 1280) / 2;
+    const y = landlordLayout.y ?? 120;
+    const spacing = landlordLayout.spacing ?? (landlordLayout.landlord_cards?.spacing) ?? 40;
+
+    // Match human player's hand card scale
+    const playerLayouts = Array.isArray(layoutData.players) ? layoutData.players : [];
+    const player0 = playerLayouts.find((p: any) => p.id === 0);
+    const handScale = player0?.scale ?? 0.8;
 
     // Ensure all landlord cards have uniform size and positioning
     for (let i = 0; i < landlordCards.length; i++) {
       const card = landlordCards[i];
       const transform = this.world.components.get(card, Transform);
       if (transform) {
-        transform.x = layout.startX + i * layout.spacing;
-        transform.y = layout.y;
+        transform.x = startX + i * spacing;
+        transform.y = y;
         transform.rotation = 0;
-        // Uniform scale for all landlord cards  
-        transform.scaleX = 0.2;
-        transform.scaleY = 0.2;
+        // Scale to match hand card size
+        transform.scaleX = handScale;
+        transform.scaleY = handScale;
         transform.zIndex = 200; // Above other cards during bidding
       }
     }
     
-    console.log(`[LandlordCardLayoutSystem] Positioned ${landlordCards.length} landlord cards with uniform scale 0.2`);
+    console.log(`[LandlordCardLayoutSystem] Positioned ${landlordCards.length} landlord cards with scale ${handScale}`);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { System } from './System';
 import { Entity } from '../types';
-import { Transform, CardData, PlayerInfo } from '../components';
+import { Transform, CardData, PlayerInfo, Sprite } from '../components';
+import { EventName } from '../EventBus';
 
 export class PlayedCardsLayoutSystem extends System {
   private playedCards: Map<number, Entity[]> = new Map(); // playerId -> cards
@@ -16,20 +17,68 @@ export class PlayedCardsLayoutSystem extends System {
 
   private setupEventListeners(): void {
     if (this.world?.eventBus) {
-      this.world.eventBus.on('CardsPlayed', this.handleCardsPlayed.bind(this));
-      this.world.eventBus.on('TurnEnded', this.clearPlayedCards.bind(this));
-      this.world.eventBus.on('RoundEnded', this.clearAllPlayedCards.bind(this));
+      // Use validated play event from rules system
+      this.world.eventBus.on(EventName.PlayCardsValidated, this.handlePlayValidated.bind(this));
+      // Also respond to state changes to re-layout from gameState.lastPlay
+      this.world.eventBus.on(EventName.GameStateChanged, this.syncFromGameState.bind(this));
+      // Preview human play immediately to ensure visible feedback
+      this.world.eventBus.on(EventName.PlayCardsRequest, this.previewHumanPlay.bind(this));
+      // Clear preview on invalid play
+      this.world.eventBus.on(EventName.InvalidPlay, this.handleInvalidPlay.bind(this));
     }
   }
 
-  private handleCardsPlayed(data: { playerId: number, cardEntities: Entity[] }): void {
-    const { playerId, cardEntities } = data;
-    
-    // Store the played cards
-    this.playedCards.set(playerId, cardEntities);
-    
-    // Layout the cards in the center area
-    this.layoutPlayedCards(playerId, cardEntities);
+  private handlePlayValidated(data: { playerId: number; cards: Entity[]; combinationType?: any }): void {
+    const { playerId, cards } = data;
+    // Only keep the newest play on table
+    this.clearAllPlayedCards();
+    this.playedCards.set(playerId, cards);
+    this.layoutPlayedCards(playerId, cards);
+  }
+
+  private syncFromGameState(payload: { gameState: any }): void {
+    try {
+      const gs = payload.gameState || payload;
+      if (!gs || !gs.lastPlay || gs.lastPlay.length === 0 || gs.lastPlayOwnerId === undefined || gs.lastPlayOwnerId === null) {
+        return;
+      }
+      // Ensure only last play is visible
+      this.clearAllPlayedCards();
+      this.playedCards.set(gs.lastPlayOwnerId, gs.lastPlay as Entity[]);
+      this.layoutPlayedCards(gs.lastPlayOwnerId, gs.lastPlay as Entity[]);
+    } catch (_) {
+      // no-op
+    }
+  }
+
+  private previewHumanPlay(data: { playerId: number; cards: Entity[] }): void {
+    try {
+      if (data.playerId !== 0 || !data.cards || data.cards.length === 0) return;
+      // Layout as a preview; validated event will confirm or InvalidPlay will clear
+      this.clearAllPlayedCards();
+      this.playedCards.set(0, data.cards);
+      this.layoutPlayedCards(0, data.cards);
+    } catch (_) {}
+  }
+
+  private handleInvalidPlay(data: { playerId: number }): void {
+    try {
+      if (!data || data.playerId !== 0) return;
+      // Remove preview for human invalid play
+      const cards = this.playedCards.get(0);
+      if (cards) {
+        cards.forEach(cardEntity => {
+          const sprite = this.world.components.tryGet(cardEntity, Sprite);
+          if (sprite) sprite.visible = false;
+        });
+        this.playedCards.delete(0);
+      }
+      // Restore last valid play on table after invalid attempt
+      const gs = this.world.getGameState?.();
+      if (gs) {
+        this.syncFromGameState({ gameState: gs });
+      }
+    } catch (_) {}
   }
 
   private layoutPlayedCards(playerId: number, cardEntities: Entity[]): void {
@@ -45,11 +94,9 @@ export class PlayedCardsLayoutSystem extends System {
     // Position cards based on player
     let baseY = centerY;
     if (playerId === 0) {
-      baseY = centerY + 50; // Player's cards slightly below center
-    } else if (playerId === 1) {
-      baseY = centerY - 50; // Left opponent's cards slightly above center
-    } else if (playerId === 2) {
-      baseY = centerY - 50; // Right opponent's cards slightly above center
+      baseY = centerY + 40; // Human a bit below center
+    } else {
+      baseY = centerY - 40; // AIs a bit above center
     }
 
     // Layout each card
@@ -59,8 +106,14 @@ export class PlayedCardsLayoutSystem extends System {
         transform.x = startX + index * cardSpacing;
         transform.y = baseY;
         transform.rotation = 0;
-        transform.scaleX = 0.8;
-        transform.scaleY = 0.8;
+        transform.scaleX = 0.7;
+        transform.scaleY = 0.7;
+        transform.zIndex = 500 + index;
+      }
+      const sprite = this.world.components.tryGet(cardEntity, Sprite);
+      if (sprite) {
+        sprite.visible = true;
+        sprite.alpha = 1;
       }
     });
   }
@@ -70,14 +123,13 @@ export class PlayedCardsLayoutSystem extends System {
     const cards = this.playedCards.get(playerId);
     
     if (cards) {
-      // Hide or remove the played cards
+      // Hide the played cards
       cards.forEach(cardEntity => {
-        const transform = this.world.components.get(cardEntity, Transform);
-        if (transform) {
-          transform.visible = false;
+        const sprite = this.world.components.tryGet(cardEntity, Sprite);
+        if (sprite) {
+          sprite.visible = false;
         }
       });
-      
       this.playedCards.delete(playerId);
     }
   }

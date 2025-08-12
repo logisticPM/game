@@ -82,9 +82,11 @@ body {
 }
 
 .bottom-controls {
-  margin-bottom: 180px; /* Position above player hand */
+  margin-bottom: 190px; /* closer to cards */
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* stack items vertically */
+  align-items: center;
+  gap: 12px; /* space between phase-info and buttons */
 }
 
 .playing-controls {
@@ -131,10 +133,18 @@ button:disabled {
 /* Bottom controls positioning */
 .bottom-controls {
   position: absolute;
-  bottom: 200px; /* More space above player avatar, below cards */
+  bottom: 220px; /* closer to bottom to free center space */
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
+}
+
+/* Phase info label above the action buttons */
+.phase-info {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
 }
 
 /* Bidding panel in center */

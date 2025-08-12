@@ -194,20 +194,24 @@ export class AISystem extends System {
       console.log(`[AISystem] Last play analyzed as:`, lastPlayCombination ? `${lastPlayCombination.type} (power: ${lastPlayCombination.power})` : 'null');
       
       if (lastPlayCombination) {
-        console.log(`[AISystem] Filtering ${allCombinations.length} combinations to find ones that can beat ${lastPlayCombination.type}`);
+        console.log(`[AISystem] Filtering ${allCombinations.length} combinations to find same-type ones that can beat ${lastPlayCombination.type}`);
         
+        // Policy: Only play same-type higher combinations (allow rocket as special case). Prefer passing to save bombs
         playableCombinations = allCombinations.filter(combo => {
-          const canBeat = CardCombinationAnalyzer.canBeat(combo, lastPlayCombination);
-          if (combo.type === CombinationType.Rocket || combo.type === CombinationType.Bomb) {
-            console.log(`[AISystem] ${combo.description} vs ${lastPlayCombination.type}: ${canBeat ? 'CAN BEAT' : 'CANNOT BEAT'}`);
+          const sameType = combo.type === lastPlayCombination.type;
+          const canBeat = sameType && CardCombinationAnalyzer.canBeat(combo, lastPlayCombination);
+          const isRocket = combo.type === CombinationType.Rocket; // Rocket can always be considered
+          if (!sameType && combo.type === CombinationType.Bomb) {
+            // Skip bombs when only overtake option is bomb
+            return false;
           }
-          return canBeat;
+          return canBeat || isRocket;
         });
         
         console.log(`[AISystem] After filtering: ${playableCombinations.length} playable combinations remain`);
         
         if (playableCombinations.length === 0) {
-          console.log(`[AISystem] AI Player ${playerId} cannot beat last play (${lastPlayCombination.type}), passing`);
+          console.log(`[AISystem] AI Player ${playerId} cannot beat last play (${lastPlayCombination.type}) with same type, passing`);
           this.world.eventBus.emit(EventName.PassTurnRequest, { playerId });
           return;
         }
@@ -229,7 +233,10 @@ export class AISystem extends System {
     const chosenCombination = this.chooseAICombination(playableCombinations, gameState, playerId);
     
     if (chosenCombination) {
-      const cardEntities = chosenCombination.cards.map((c: { entity: number }) => c.entity);
+      // Use entities provided by analyzer; fallback to extracting from CardData if needed
+      const cardEntities = (chosenCombination as any).entities && (chosenCombination as any).entities.length
+        ? (chosenCombination as any).entities
+        : chosenCombination.cards.map((c: any) => c.entity).filter((e: any) => typeof e === 'number');
       console.log(`[AISystem] AI Player ${playerId} CHOSEN: ${chosenCombination.description} (power:${chosenCombination.power})`);
       console.log(`[AISystem] Cards:`, chosenCombination.cards.map((c: { rank: string; suit: string }) => `${c.rank}${c.suit}`));
       

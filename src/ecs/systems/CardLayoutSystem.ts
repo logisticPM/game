@@ -226,7 +226,8 @@ export class CardLayoutSystem extends System {
         const startX = trueCenterX - actualTotalWidth / 2; // Perfect centering
         
         // Position cards between bid panel and player info
-        const cardY = 580; // Between bid panel (bottom: 120px) and player avatar area
+        // Bring hand cards closer to bottom avatar to free more center space
+        const cardY = 600; // was 520; higher y moves closer to avatar
         
         console.log(`[CardLayoutSystem] Human player CONSISTENT layout:`);
         console.log(`  - Cards: ${cardCount}, spacing: ${finalSpacing}px (fixed: ${FIXED_CARD_SPACING}px)`);
@@ -316,6 +317,8 @@ export class CardLayoutSystem extends System {
     if (landlordCardEntities.length === 0) return;
 
     const landlordConfig = dataManager.getGameData().layout.landlord_cards;
+    const player0Config = dataManager.getGameData().layout.players.find((p: PlayerLayout) => p.id === 0);
+    const handScale = player0Config?.scale ?? 0.8; // Match human hand card size
     
     let index = 0;
     for (const cardEntity of landlordCardEntities) {
@@ -324,8 +327,9 @@ export class CardLayoutSystem extends System {
         // Position landlord cards horizontally at the top
         transform.x = landlordConfig.x + (index - 1) * landlordConfig.spacing; // Center around x
         transform.y = landlordConfig.y;
-        transform.scaleX = 0.12; // Very small scale for landlord cards - smaller than before
-        transform.scaleY = 0.12;
+        // Match hand card scale per request
+        transform.scaleX = handScale;
+        transform.scaleY = handScale;
         transform.zIndex = 100 + index; // High z-index to appear on top
         
         console.log(`[CardLayoutSystem] Landlord card ${index} positioned at (${transform.x}, ${transform.y}) with scale ${transform.scaleX}`);

@@ -527,7 +527,7 @@ export class RenderSystem extends System {
                   currentGameState.currentPlayerId === 0) {
                   
                   console.log(`[Click] Card ${entity} (${cardData?.rank}${cardData?.suit}) clicked!`);
-                  this.world.eventBus.emit('selectCardRequest', { 
+                  this.world.eventBus.emit(EventName.SelectCardRequest, { 
                       playerId: 0, 
                       cardEntity: entity 
                   });
