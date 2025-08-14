@@ -205,6 +205,10 @@ export class AISystem extends System {
             // Skip bombs when only overtake option is bomb
             return false;
           }
+          // For straights/straight pairs, enforce same length
+          if (sameType && (combo.type === CombinationType.Straight || combo.type === CombinationType.StraightPair)) {
+            if (combo.cards.length !== lastPlayCombination.cards.length) return false;
+          }
           return canBeat || isRocket;
         });
         

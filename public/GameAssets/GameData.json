@@ -10,7 +10,7 @@
       "spacing": 40
     },
     "players": [
-      { "id": 0, "x": 640, "y": 580, "cardSpacing": 25, "scale": 0.8 },
+      { "id": 0, "x": 640, "y": 640, "cardSpacing": 25, "scale": 0.8 },
       { "id": 1, "x": 100, "y": 200, "cardSpacing": 25, "scale": 0.25 },
       { "id": 2, "x": 1180, "y": 200, "cardSpacing": 25, "scale": 0.25 }
     ],

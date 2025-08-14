@@ -73,6 +73,14 @@ export class PlayValidationSystem extends System {
       return;
     }
 
+    // Debug: log round context before analyzing
+    console.log('[PlayValidationSystem] Context before validation:', {
+      currentPlayerId: gameState.currentPlayerId,
+      lastPlayOwnerId: gameState.lastPlayOwnerId,
+      passCount: gameState.passCount,
+      lastPlayCount: gameState.lastPlay ? gameState.lastPlay.length : 0
+    });
+
     // Analyze the play
     const playInfo = this.analyzePlay(cards);
     const lastPlayInfo = gameState.lastPlay ? this.analyzePlay(gameState.lastPlay) : null;
@@ -172,17 +180,25 @@ export class PlayValidationSystem extends System {
       return;
     }
 
+    const before = {
+      currentPlayerId: gameState.currentPlayerId,
+      lastPlayOwnerId: gameState.lastPlayOwnerId,
+      passCount: gameState.passCount
+    };
     gameState.passCount++;
     gameState.currentPlayerId = (gameState.currentPlayerId + 1) % 3;
+    const afterCurrent = gameState.currentPlayerId;
 
     // If everyone else has passed, the last player who played gets to play again
-    if (gameState.passCount >= 2) {
+    // Only clear the round when turn cycles back to lastPlayOwner
+    if (gameState.passCount >= 2 && afterCurrent === gameState.lastPlayOwnerId) {
       // Clear all played cards from the table when round ends
       this.clearPlayedCards();
       
       gameState.lastPlay = null;
       gameState.lastPlayOwnerId = null;
       gameState.passCount = 0;
+      console.log('[PlayValidationSystem] Round cleared after two passes and turn returned to lastPlayOwner', { before, afterCurrent });
     }
 
     this.world.eventBus.emit(EventName.GameStateChanged, { gameState });
@@ -359,16 +375,6 @@ export class PlayValidationSystem extends System {
         const hasJokers = cardDataList.some(card => card.suit === 'joker');
         if (hasJokers) {
           return { type: CombinationType.Invalid, power: 0, cards };
-        }
-
-        // Special case: Check for J-Q-K-A-2 straight (values 11,12,13,14,15)
-        const values = cardDataList.map(card => card.value).sort((a, b) => a - b);
-        const isJQKA2 = cards.length === 5 && 
-                        values[0] === 11 && values[1] === 12 && values[2] === 13 && 
-                        values[3] === 14 && values[4] === 15;
-        
-        if (isJQKA2) {
-          return { type: CombinationType.Straight, power: 15, cards }; // Power is 2 (value 15)
         }
 
         // For regular straights, exclude 2 (value 15 cannot connect normally)
@@ -554,6 +560,11 @@ export class PlayValidationSystem extends System {
     // For regular plays, type must match and power must be higher
     if (play.type !== lastPlay.type) {
       return { valid: false, reason: `Must play the same combination type (${lastPlay.type})` };
+    }
+
+    // For straights and straight pairs, the length must match
+    if ((play.type === CombinationType.Straight || play.type === CombinationType.StraightPair) && play.cards.length !== lastPlay.cards.length) {
+      return { valid: false, reason: 'Straight length must match the previous play' };
     }
 
     if (play.power <= lastPlay.power) {

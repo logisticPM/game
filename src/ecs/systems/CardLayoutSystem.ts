@@ -225,9 +225,8 @@ export class CardLayoutSystem extends System {
         const actualTotalWidth = cardCount > 1 ? (cardCount - 1) * finalSpacing : 0;
         const startX = trueCenterX - actualTotalWidth / 2; // Perfect centering
         
-        // Position cards between bid panel and player info
-        // Bring hand cards closer to bottom avatar to free more center space
-        const cardY = 600; // was 520; higher y moves closer to avatar
+        // Position cards further down to avoid bidding panel overlap and closer to avatar
+        const cardY = 660; // move lower
         
         console.log(`[CardLayoutSystem] Human player CONSISTENT layout:`);
         console.log(`  - Cards: ${cardCount}, spacing: ${finalSpacing}px (fixed: ${FIXED_CARD_SPACING}px)`);

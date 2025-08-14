@@ -209,10 +209,11 @@ export class CardCombinationAnalyzer {
     
     // Check for straight (5 consecutive cards)
     if (this.isStraight(cards)) {
+      const maxValue = Math.max(...cards.map(c => c.value));
       return {
         type: CombinationType.Straight,
-        power: Math.min(...cards.map(c => c.value)),
-        strength: Math.min(...cards.map(c => c.value)),
+        power: maxValue,
+        strength: maxValue,
         isValid: true,
         description: 'Straight',
         mainCards: cards
@@ -252,10 +253,11 @@ export class CardCombinationAnalyzer {
   private static analyzeComplexCombination(cards: CardData[]): CombinationAnalysis {
     // Check for straight
     if (this.isStraight(cards)) {
+      const maxValue = Math.max(...cards.map(c => c.value));
       return {
         type: CombinationType.Straight,
-        power: Math.min(...cards.map(c => c.value)),
-        strength: Math.min(...cards.map(c => c.value)),
+        power: maxValue,
+        strength: maxValue,
         isValid: true,
         description: `${cards.length}-card straight`,
         mainCards: cards
@@ -264,13 +266,13 @@ export class CardCombinationAnalyzer {
 
     // Check for pair straight
     if (this.isPairStraight(cards)) {
-      const minValue = Math.min(...cards.map(c => c.value));
+      const maxValue = Math.max(...cards.map(c => c.value));
       return {
         type: CombinationType.StraightPair,
-        power: minValue,
-        strength: minValue,
+        power: maxValue,
+        strength: maxValue,
         isValid: true,
-        description: `Pair straight starting from ${this.getValueName(minValue)}`,
+        description: `Pair straight ending at ${this.getValueName(maxValue)}`,
         mainCards: cards
       };
     }
@@ -300,6 +302,8 @@ export class CardCombinationAnalyzer {
     
     const values = [...new Set(cards.map(c => c.value))].sort((a, b) => a - b);
     if (values.length !== cards.length) return false;
+    // exclude 2 and jokers (>=15) for regular straights; allow special JQKA2 only via analyze logic, not here
+    if (values.some(v => v >= 15)) return false;
     
     // Check for consecutive values
     for (let i = 1; i < values.length; i++) {
@@ -323,6 +327,8 @@ export class CardCombinationAnalyzer {
         return false;
       }
     }
+    // exclude 2 and jokers
+    if (values.some(v => v >= 15)) return false;
     
     // Values should be consecutive
     for (let i = 1; i < values.length; i++) {
@@ -503,6 +509,90 @@ export class CardCombinationAnalyzer {
           description: `Bomb (${this.getValueName(value)})`,
           entities
         });
+      }
+    }
+
+    // Straights (length >= 5), exclude 2 and jokers (value >= 15). No J-Q-K-A-2 special case.
+    {
+      const uniqueByValue: Map<number, CardData[]> = new Map();
+      for (const c of cards) {
+        if (!uniqueByValue.has(c.value)) uniqueByValue.set(c.value, []);
+        uniqueByValue.get(c.value)!.push(c);
+      }
+      const values = Array.from(uniqueByValue.keys())
+        .filter(v => v < 15) // exclude 2 and jokers
+        .sort((a, b) => a - b);
+      // Find consecutive runs
+      let runStart = 0;
+      for (let i = 1; i <= values.length; i++) {
+        const isBreak = i === values.length || values[i] !== values[i - 1] + 1;
+        if (isBreak) {
+          const run = values.slice(runStart, i);
+          if (run.length >= 5) {
+            // Generate all straight segments length >=5 within run
+            for (let len = 5; len <= run.length; len++) {
+              for (let s = 0; s + len <= run.length; s++) {
+                const segment = run.slice(s, s + len);
+                const straightCards: CardData[] = segment.map(v => uniqueByValue.get(v)![0]);
+                const straightEntities = straightCards.map(card => cardDataMap.get(card)!);
+                const maxValue = Math.max(...segment);
+                combinations.push({
+                  cards: straightCards,
+                  type: CombinationType.Straight,
+                  power: maxValue,
+                  strength: maxValue,
+                  isValid: true,
+                  description: `${len}-card straight ending at ${this.getValueName(maxValue)}`,
+                  entities: straightEntities
+                });
+              }
+            }
+          }
+          runStart = i;
+        }
+      }
+      // Removed J-Q-K-A-2 special case to align with strict rules
+    }
+
+    // Straight pairs (连对): at least 3 consecutive pairs
+    {
+      const valueGroupsPairs = new Map<number, CardData[]>();
+      for (const [value, groupCards] of valueGroups.entries()) {
+        if (groupCards.length >= 2 && value < 15) {
+          valueGroupsPairs.set(value, groupCards);
+        }
+      }
+      const values = Array.from(valueGroupsPairs.keys()).sort((a, b) => a - b);
+      let runStart = 0;
+      for (let i = 1; i <= values.length; i++) {
+        const isBreak = i === values.length || values[i] !== values[i - 1] + 1;
+        if (isBreak) {
+          const run = values.slice(runStart, i);
+          if (run.length >= 3) {
+            for (let len = 3; len <= run.length; len++) {
+              for (let s = 0; s + len <= run.length; s++) {
+                const segment = run.slice(s, s + len);
+                const pairCards: CardData[] = [];
+                segment.forEach(v => {
+                  const g = valueGroupsPairs.get(v)!;
+                  pairCards.push(g[0], g[1]);
+                });
+                const entities = pairCards.map(c => cardDataMap.get(c)!);
+                const maxValue = Math.max(...segment);
+                combinations.push({
+                  cards: pairCards,
+                  type: CombinationType.StraightPair,
+                  power: maxValue,
+                  strength: maxValue,
+                  isValid: true,
+                  description: `${len} consecutive pairs ending at ${this.getValueName(maxValue)}`,
+                  entities
+                });
+              }
+            }
+          }
+          runStart = i;
+        }
       }
     }
 

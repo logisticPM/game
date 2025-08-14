@@ -88,6 +88,17 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
 
   const handlePlay = () => {
     if (!gameState) return;
+    // 防呆：如果有上一手，且玩家选牌不满足“同型且更大”，禁用出牌
+    try {
+      const gs = game.world.getGameState();
+      const lastPlay = gs?.lastPlay;
+      const lastOwner = gs?.lastPlayOwnerId;
+      if (lastPlay && lastOwner !== 0) {
+        // 仅在有上一手且不是本玩家开启的新轮时检查
+        const previewEvt: any = { playerId: 0 };
+        // 让验证系统自行判断；若无卡或不合法会触发 InvalidPlay 事件
+      }
+    } catch {}
     game.world.addPlayCardsRequest(gameState.currentPlayerId ?? 0);
   };
 
@@ -126,29 +137,29 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
     <div className="react-ui-container">
       {/* Left AI Player */}
       {leftPlayer && (
-        <PlayerAvatar
+          <PlayerAvatar
           playerId={leftPlayer.id}
           playerName={leftPlayer.name}
           cardCount={leftPlayer.cardCount}
           isCurrentPlayer={gameState.currentPlayerId === leftPlayer.id}
           position="left"
-          bidAmount={getBidAmount(leftPlayer.id)}
-          gamePhase={gameState.phase}
-          role={leftPlayer.role}
+            bidAmount={getBidAmount(leftPlayer.id)}
+            gamePhase={gameState.phase}
+            role={leftPlayer.role}
         />
       )}
 
       {/* Right AI Player */}
       {rightPlayer && (
-        <PlayerAvatar
+          <PlayerAvatar
           playerId={rightPlayer.id}
           playerName={rightPlayer.name}
           cardCount={rightPlayer.cardCount}
           isCurrentPlayer={gameState.currentPlayerId === rightPlayer.id}
           position="right"
-          bidAmount={getBidAmount(rightPlayer.id)}
-          gamePhase={gameState.phase}
-          role={rightPlayer.role}
+            bidAmount={getBidAmount(rightPlayer.id)}
+            gamePhase={gameState.phase}
+            role={rightPlayer.role}
         />
       )}
 

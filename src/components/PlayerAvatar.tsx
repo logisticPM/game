@@ -3,10 +3,11 @@ import React from 'react';
 interface PlayerAvatarProps {
   playerId: number;
   playerName?: string;
-  isLandlord?: boolean;
+  isLandlord?: boolean; // backward compatibility
   isCurrentPlayer?: boolean;
   cardCount?: number;
   position?: 'top' | 'left' | 'right' | 'bottom';
+  role?: 'farmer' | 'landlord';
 }
 
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
@@ -15,8 +16,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   isLandlord = false,
   isCurrentPlayer = false,
   cardCount = 0,
-  position = 'bottom'
+  position = 'bottom',
+  role
 }) => {
+  const resolvedIsLandlord = role ? role === 'landlord' : isLandlord;
   const getPositionStyles = () => {
     const baseStyles = {
       position: 'absolute' as const,
@@ -48,20 +51,28 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
 
   return (
     <div style={getPositionStyles()}>
-      <div style={{
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
-        backgroundColor: isLandlord ? '#FFD700' : '#4A90E2',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 'bold',
-        fontSize: '16px',
-        color: isLandlord ? '#000' : '#fff'
-      }}>
-        {isLandlord ? '地' : playerId}
-      </div>
+      {role ? (
+        <img
+          src={resolvedIsLandlord ? '/GameAssets/images/landlord.png' : '/GameAssets/images/farmer.png'}
+          alt={resolvedIsLandlord ? 'landlord' : 'farmer'}
+          style={{ width: '56px', height: '56px', borderRadius: '8px', objectFit: 'cover', boxShadow: isCurrentPlayer ? '0 0 0 2px yellow' : 'none' }}
+        />
+      ) : (
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          backgroundColor: resolvedIsLandlord ? '#FFD700' : '#4A90E2',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          color: resolvedIsLandlord ? '#000' : '#fff'
+        }}>
+          {resolvedIsLandlord ? '地' : playerId}
+        </div>
+      )}
       
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontWeight: 'bold' }}>
@@ -70,7 +81,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
         <div style={{ fontSize: '10px', opacity: 0.8 }}>
           {cardCount} cards
         </div>
-        {isLandlord && (
+        {resolvedIsLandlord && (
           <div style={{ 
             fontSize: '10px', 
             color: '#FFD700',
