@@ -3,6 +3,7 @@ import { Game } from '../game/Game';
 import { GameState, GamePhase, PlayerInfo, Hand } from '../ecs/components';
 import { PlayedCardsArea } from './PlayedCardsArea';
 import { PlayerAvatar } from './PlayerAvatar';
+import { EventName } from '../ecs/EventBus';
 
 interface HudProps {
   game: Game;
@@ -13,6 +14,8 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
   const [playerData, setPlayerData] = useState<{id: number, name: string, cardCount: number, role: 'farmer' | 'landlord'}[]>([]);
   const [hintResult, setHintResult] = useState<{description: string, cards: any[]} | null>(null);
   const [showHint, setShowHint] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showError, setShowError] = useState<boolean>(false);
 
   useEffect(() => {
     const updatePlayerData = () => {
@@ -81,6 +84,26 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
     };
   }, [game.world]);
 
+  // Listen for invalid play events
+  useEffect(() => {
+    const handleInvalidPlay = (event: { playerId: number; reason: string }) => {
+      console.log('[HUD] Invalid play detected:', event);
+      setErrorMessage(event.reason);
+      setShowError(true);
+      
+      // Auto-hide error after 4 seconds
+      setTimeout(() => {
+        setShowError(false);
+      }, 4000);
+    };
+
+    const unsubscribeInvalidPlay = game.world.eventBus.on(EventName.InvalidPlay, handleInvalidPlay);
+
+    return () => {
+      unsubscribeInvalidPlay();
+    };
+  }, [game.world]);
+
   const handleBid = (amount: number) => {
     if (!gameState) return;
     game.world.addBidRequest(gameState.currentPlayerId ?? 0, amount);
@@ -95,7 +118,6 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
       const lastOwner = gs?.lastPlayOwnerId;
       if (lastPlay && lastOwner !== 0) {
         // 仅在有上一手且不是本玩家开启的新轮时检查
-        const previewEvt: any = { playerId: 0 };
         // 让验证系统自行判断；若无卡或不合法会触发 InvalidPlay 事件
       }
     } catch {}
@@ -229,6 +251,23 @@ export const Hud: React.FC<HudProps> = ({ game }) => {
                 Waiting for other players to play...
               </div>
             )}
+          </div>
+        )}
+
+        {/* Error Message Display */}
+        {showError && errorMessage && (
+          <div className="error-display">
+            <div className="error-content">
+              <span className="error-icon">❌</span>
+              <span className="error-text">{errorMessage}</span>
+            </div>
+            <button 
+              className="error-close" 
+              onClick={() => setShowError(false)}
+              title="Close error"
+            >
+              ×
+            </button>
           </div>
         )}
 

@@ -99,6 +99,10 @@ export class PlayValidationSystem extends System {
     // Validate the play
     const validationResult = this.validatePlay(playInfo, lastPlayInfo, gameState.lastPlayOwnerId === playerId);
     if (!validationResult.valid) {
+      // Clear selected cards when play is invalid (only for human player)
+      if (playerId === 0) {
+        this.world.eventBus.emit('clearCardSelection', { playerId });
+      }
       this.world.eventBus.emit(EventName.InvalidPlay, { 
         playerId, 
         reason: validationResult.reason 

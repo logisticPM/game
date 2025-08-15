@@ -309,18 +309,29 @@ export class AISystem extends System {
              [CombinationType.Single]: 10
            };
            
-           bestCombination = combinations.reduce((best, current) => {
-             const bestComplexity = complexityOrder[best.type as string] || 0;
-             const currentComplexity = complexityOrder[current.type as string] || 0;
+                     bestCombination = combinations.reduce((best, current) => {
+            // First priority: prefer combinations that use ALL cards
+            const bestUsesAllCards = best.cards.length === lastPlayCards.length;
+            const currentUsesAllCards = current.cards.length === lastPlayCards.length;
             
-            // Prefer higher complexity first, then higher power
-            if (currentComplexity > bestComplexity) {
+            if (currentUsesAllCards && !bestUsesAllCards) {
               return current;
-            } else if (currentComplexity === bestComplexity && current.power > best.power) {
-              return current;
+            } else if (!currentUsesAllCards && bestUsesAllCards) {
+              return best;
             }
-            return best;
-          });
+            
+            // If both use all cards or both don't, use complexity and power
+            const bestComplexity = complexityOrder[best.type as string] || 0;
+            const currentComplexity = complexityOrder[current.type as string] || 0;
+           
+           // Prefer higher complexity first, then higher power
+           if (currentComplexity > bestComplexity) {
+             return current;
+           } else if (currentComplexity === bestComplexity && current.power > best.power) {
+             return current;
+           }
+           return best;
+         });
         }
         
         console.log(`[AISystem] Selected combination: ${bestCombination.type} (${bestCombination.description})`);
