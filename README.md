@@ -1,173 +1,173 @@
-# 🎮 Landlord Game (斗地主)
+# 🎮 Landlord Game (Dou Dizhu)
 
-一个基于 React + TypeScript + PIXI.js + ECS 架构的现代化斗地主游戏。
+A modern Dou Dizhu (Chinese poker game) built with React + TypeScript + PIXI.js + ECS architecture.
 
-## ✨ 特性
+## ✨ Features
 
-### 🎯 核心功能
-- **完整的斗地主游戏逻辑** - 包括叫地主、出牌、胜负判定
-- **智能 AI 对手** - 多种难度的 AI 策略
-- **实时游戏状态** - 流畅的游戏体验和状态管理
-- **卡牌动画** - 丰富的视觉效果和过渡动画
+### 🎯 Core Functionality
+- **Complete Dou Dizhu game logic** - Including landlord bidding, card playing, and win/lose determination
+- **Intelligent AI opponents** - Multiple difficulty levels with strategic AI
+- **Real-time game state** - Smooth gameplay experience and state management
+- **Card animations** - Rich visual effects and smooth transitions
 
-### 🛠️ 技术架构
-- **React 18** - 现代化的 UI 框架
-- **TypeScript** - 类型安全的开发体验
-- **PIXI.js 7** - 高性能的 2D 渲染引擎
-- **ECS 架构** - 实体-组件-系统的游戏架构
-- **Vite** - 快速的构建工具
+### 🛠️ Technical Architecture
+- **React 18** - Modern UI framework
+- **TypeScript** - Type-safe development experience
+- **PIXI.js 7** - High-performance 2D rendering engine
+- **ECS Architecture** - Entity-Component-System game architecture
+- **Vite** - Fast build tool
 
-### 🎨 视觉特性
-- **Sprite Sheet 优化** - 高效的资产加载和内存使用
-- **响应式设计** - 适配不同屏幕尺寸
-- **调试工具** - 完整的开发调试界面
+### 🎨 Visual Features
+- **Sprite Sheet optimization** - Efficient asset loading and memory usage
+- **Responsive design** - Adapts to different screen sizes
+- **Debug tools** - Complete development debugging interface
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 安装依赖
+### Install Dependencies
 ```bash
 npm install
 ```
 
-### 启动开发服务器
+### Start Development Server
 ```bash
 npm run dev
 ```
 
-### 构建生产版本
+### Build for Production
 ```bash
 npm run build
 ```
 
-### 预览生产版本
+### Preview Production Build
 ```bash
 npm run preview
 ```
 
-## 🎮 游戏说明
+## 🎮 Game Instructions
 
-### 基本规则
-1. **叫地主阶段** - 3名玩家轮流叫地主，最高叫价者成为地主
-2. **发牌阶段** - 每人17张牌，剩余3张为地主牌
-3. **出牌阶段** - 地主先出牌，其他玩家轮流跟牌或过牌
-4. **胜负判定** - 地主先出完牌则地主胜，否则农民胜
+### Basic Rules
+1. **Landlord Bidding Phase** - 3 players take turns bidding, highest bidder becomes the landlord
+2. **Card Distribution** - Each player gets 17 cards, remaining 3 cards go to the landlord
+3. **Playing Phase** - Landlord plays first, other players take turns to follow or pass
+4. **Win Condition** - Landlord wins if they play all cards first, otherwise farmers win
 
-### 操作方式
-- **选择卡牌** - 点击卡牌进行选择/取消选择
-- **出牌** - 选择卡牌后点击"出牌"按钮
-- **过牌** - 点击"过"按钮跳过当前回合
-- **叫地主** - 在叫地主阶段点击相应的叫价按钮
+### How to Play
+- **Select Cards** - Click on cards to select/deselect them
+- **Play Cards** - After selecting cards, click the "Play" button
+- **Pass** - Click the "Pass" button to skip your turn
+- **Bid for Landlord** - During bidding phase, click the corresponding bid buttons
 
-## 🔧 开发指南
+## 🔧 Development Guide
 
-### 项目结构
+### Project Structure
 ```
 landlord/
-├── public/                 # 静态资源
-│   ├── GameAssets/         # 游戏资产
-│   │   ├── images/         # 图片资源 (Sprite Sheets)
-│   │   └── GameData.json   # 游戏配置
-│   └── vite.svg           # 网站图标
+├── public/                 # Static assets
+│   ├── GameAssets/         # Game assets
+│   │   ├── images/         # Image resources (Sprite Sheets)
+│   │   └── GameData.json   # Game configuration
+│   └── vite.svg           # Website icon
 ├── src/
-│   ├── components/         # React 组件
-│   ├── debug/              # 调试工具
-│   ├── ecs/                # ECS 架构
-│   │   ├── components/     # ECS 组件
-│   │   ├── entities/       # 实体工厂
-│   │   └── systems/        # 游戏系统
-│   ├── game/               # 游戏核心
-│   │   ├── Game.ts         # 游戏主类
-│   │   ├── DataManager.ts  # 数据管理
-│   │   └── SpriteSheetLoader.ts # 资产加载
-│   ├── App.tsx             # 主应用组件
-│   ├── main.tsx            # 应用入口
-│   └── styles.css          # 全局样式
+│   ├── components/         # React components
+│   ├── debug/              # Debug tools
+│   ├── ecs/                # ECS architecture
+│   │   ├── components/     # ECS components
+│   │   ├── entities/       # Entity factories
+│   │   └── systems/        # Game systems
+│   ├── game/               # Game core
+│   │   ├── Game.ts         # Main game class
+│   │   ├── DataManager.ts  # Data management
+│   │   └── SpriteSheetLoader.ts # Asset loading
+│   ├── App.tsx             # Main application component
+│   ├── main.tsx            # Application entry point
+│   └── styles.css          # Global styles
 ```
 
-### ECS 架构说明
+### ECS Architecture Overview
 
-#### 实体 (Entities)
-- **玩家实体** - 包含玩家信息、手牌、选择状态
-- **卡牌实体** - 包含卡牌数据、变换、渲染信息
-- **游戏管理器** - 包含游戏状态、回合信息
+#### Entities
+- **Player Entities** - Contains player info, hand cards, selection state
+- **Card Entities** - Contains card data, transform, rendering info
+- **Game Manager** - Contains game state, turn information
 
-#### 组件 (Components)
-- **Transform** - 位置、旋转、缩放
-- **Sprite** - 纹理、可见性、交互性
-- **CardData** - 卡牌数据 (花色、点数、值)
-- **PlayerInfo** - 玩家信息 (ID、姓名、角色)
-- **GameState** - 游戏状态 (阶段、当前玩家、上次出牌)
+#### Components
+- **Transform** - Position, rotation, scale
+- **Sprite** - Texture, visibility, interactivity
+- **CardData** - Card data (suit, rank, value)
+- **PlayerInfo** - Player information (ID, name, role)
+- **GameState** - Game state (phase, current player, last play)
 
-#### 系统 (Systems)
-- **RenderSystem** - 渲染管理
-- **BiddingSystem** - 叫地主逻辑
-- **PlayValidationSystem** - 出牌验证
-- **AISystem** - AI 决策
-- **WinConditionSystem** - 胜负判定
+#### Systems
+- **RenderSystem** - Rendering management
+- **BiddingSystem** - Landlord bidding logic
+- **PlayValidationSystem** - Card play validation
+- **AISystem** - AI decision making
+- **WinConditionSystem** - Win/lose determination
 
-### 资产管理
+### Asset Management
 
-#### Sprite Sheet 配置
-游戏使用高效的 Sprite Sheet 技术：
+#### Sprite Sheet Configuration
+The game uses efficient Sprite Sheet technology:
 
-- **PlayingCards 128x178.png** - 52张扑克牌 (13×4 布局)
-- **Jokers 128x178.png** - 大王小王 (2×1 布局)  
-- **Card Backs 128x178.png** - 4种卡背样式 (4×1 布局)
+- **PlayingCards 128x178.png** - 52 playing cards (13×4 layout)
+- **Jokers 128x178.png** - Big and small jokers (2×1 layout)  
+- **Card Backs 128x178.png** - 4 card back styles (4×1 layout)
 
-#### 配置文件
-所有游戏配置在 `public/GameAssets/GameData.json` 中：
-- 布局配置 (玩家位置、卡牌间距)
-- 卡牌定义 (花色、点数、值、文件名)
-- Sprite Sheet 路径和配置
+#### Configuration Files
+All game configuration is in `public/GameAssets/GameData.json`:
+- Layout configuration (player positions, card spacing)
+- Card definitions (suits, ranks, values, filenames)
+- Sprite Sheet paths and configurations
 
-## 🔍 调试工具
+## 🔍 Debug Tools
 
-### 开发调试
-- **F1** - 切换调试面板
-- **Sprite Sheet 测试** - 验证所有卡牌资产加载
-- **ECS 状态查看** - 实时查看组件和系统状态
+### Development Debugging
+- **F1** - Toggle debug panel
+- **Sprite Sheet Testing** - Verify all card asset loading
+- **ECS State Viewer** - Real-time component and system state viewing
 
-### 性能监控
-- **内存使用** - 监控纹理内存占用
-- **渲染性能** - FPS 和渲染统计
-- **加载统计** - 资产加载时间和状态
+### Performance Monitoring
+- **Memory Usage** - Monitor texture memory consumption
+- **Rendering Performance** - FPS and rendering statistics
+- **Loading Statistics** - Asset loading time and status
 
-## 📋 技术特点
+## 📋 Technical Highlights
 
-### 🚀 性能优化
-- **Sprite Sheet** - 减少 HTTP 请求数量 (54→3)
-- **对象池** - 减少垃圾回收
-- **批量渲染** - 提高 GPU 利用率
+### 🚀 Performance Optimization
+- **Sprite Sheet** - Reduce HTTP requests (54→3)
+- **Object Pooling** - Reduce garbage collection
+- **Batch Rendering** - Improve GPU utilization
 
-### 🛡️ 类型安全
-- **完整 TypeScript** - 编译时错误检查
-- **接口定义** - 明确的数据结构
-- **泛型组件** - 可复用的类型安全组件
+### 🛡️ Type Safety
+- **Full TypeScript** - Compile-time error checking
+- **Interface Definitions** - Clear data structures
+- **Generic Components** - Reusable type-safe components
 
-### 🎯 可扩展性
-- **ECS 架构** - 易于添加新功能
-- **模块化设计** - 独立的系统和组件
-- **配置驱动** - 游戏规则可配置
+### 🎯 Extensibility
+- **ECS Architecture** - Easy to add new features
+- **Modular Design** - Independent systems and components
+- **Configuration-Driven** - Configurable game rules
 
-## 🤝 贡献指南
+## 🤝 Contributing
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🎉 致谢
+## 🎉 Acknowledgments
 
-- **PIXI.js** - 强大的 2D 渲染引擎
-- **React** - 优秀的 UI 框架  
-- **TypeScript** - 类型安全的 JavaScript
-- **Vite** - 快速的构建工具
+- **PIXI.js** - Powerful 2D rendering engine
+- **React** - Excellent UI framework  
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Fast build tool
 
 ---
 
-🎮 **开始您的斗地主之旅吧！** 🚀
+🎮 **Start your Dou Dizhu journey!** 🚀
